@@ -1,0 +1,85 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+rule_files:
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "docker-host"
+    static_configs:
+      - targets: ["localhost:9091"]
+
+  - job_name: "proxmox"
+    static_configs:
+      - targets: # ["target_address"]
+    metrics_path: /pve
+    params:
+      module: [default]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 127.0.0.1:9221
+
+  - job_name: "synology"
+    static_configs:
+      - targets: # ["target_address"]
+    metrics_path: /snmp
+    params:
+      module: [synology]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 127.0.0.1:9116
+
+  - job_name: "unifi"
+    static_configs:
+      - targets: ["127.0.0.1:9130"]
+
+  - job_name: "ping"
+    static_configs:
+      - targets:
+          - 1.0.0.1
+          - 1.1.1.1
+          - 4.2.2.2
+          - 8.8.4.4
+          - 8.8.8.8
+    metrics_path: /probe
+    params:
+      module: [icmp]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 127.0.0.1:9115
+
+  - job_name: "http_probe"
+    static_configs:
+      - targets:
+          - facebook.com
+          - github.com
+          - google.com
+          - netflix.com
+          - reddit.com
+          - youtube.com
+    metrics_path: /probe
+    params:
+      module: [http]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 127.0.0.1:9115

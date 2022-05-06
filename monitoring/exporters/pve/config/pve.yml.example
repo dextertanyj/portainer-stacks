@@ -1,0 +1,3 @@
+default:
+  user: "username@realm"
+  password: "password"
