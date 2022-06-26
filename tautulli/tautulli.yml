@@ -1,0 +1,18 @@
+version: "3.1"
+
+volumes:
+  tautulli-vol:
+
+services:
+  tautulli:
+    image: tautulli/tautulli
+    container_name: tautulli
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TIMEZONE}
+    volumes:
+      - tautulli-vol:/config
+    ports:
+      - 8181:8181
+    restart: unless-stopped

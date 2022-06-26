@@ -1,0 +1,97 @@
+version: "3.1"
+
+volumes:
+  lidarr-vol:
+  radarr-vol:
+  sonarr-vol:
+  jackett-vol:
+  transmission-vol:
+
+services:
+  pia-vpn:
+    image: dextertanyj/pia-vpn
+    container_name: pia-vpn
+    environment:
+      - USERNAME=${PIA_USERNAME}
+      - PASSWORD='${PIA_PASSWORD}'
+      - REGION=${REGION}
+      - SUBNET=${SUBNET}
+    ports:
+      - 7878:7878
+      - 8686:8686
+      - 8989:8989
+      - 9191:9091
+      - 9117:9117
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+    restart: unless-stopped
+  lidarr:
+    image: lscr.io/linuxserver/lidarr
+    container_name: lidarr
+    environment:
+      - PUID=1100
+      - PGID=1100
+      - TZ=${TIMEZONE}
+    volumes:
+      - lidarr-vol:/config
+      - ${MEDIA_FOLDER}:/media
+    network_mode: "service:pia-vpn"
+    restart: unless-stopped
+  radarr:
+    image: lscr.io/linuxserver/radarr
+    container_name: radarr
+    environment:
+      - PUID=1200
+      - PGID=1200
+      - TZ=${TIMEZONE}
+    volumes:
+      - radarr-vol:/config
+      - ${MEDIA_FOLDER}:/media
+    network_mode: "service:pia-vpn"
+    restart: unless-stopped
+  sonarr:
+    image: lscr.io/linuxserver/sonarr
+    container_name: sonarr
+    environment:
+      - PUID=1300
+      - PGID=1300
+      - TZ=${TIMEZONE}
+    volumes:
+      - sonarr-vol:/config
+      - ${MEDIA_FOLDER}:/media
+    network_mode: "service:pia-vpn"
+    restart: unless-stopped
+  jackett:
+    image: lscr.io/linuxserver/jackett
+    container_name: jackett
+    environment:
+      - PUID=1400
+      - PGID=1400
+      - TZ=${TIMEZONE}
+      - AUTO_UPDATE=true
+    volumes:
+      - jackett-vol:/config
+      - ${DOWNLOAD_FOLDER}:/downloads
+    network_mode: "service:pia-vpn"
+    restart: unless-stopped
+  transmission:
+    image: lscr.io/linuxserver/transmission
+    container_name: transmission
+    environment:
+      - PUID=1500
+      - PGID=1500
+      - USER=${TRANSMISSION_USERNAME}
+      - PASS='$TRANSMISSION_PASSWORD}'
+      - TZ=${TIMEZONE}
+      - ALL_PROXY=${PROXY_URL}
+      - TRANSMISSION_WEB_HOME=/transmission-web-control/
+    volumes:
+      - transmission-vol:/config
+      - ${DOWNLOAD_FOLDER}:/downloads
+      - ${MONITORED_FOLDER}:/watch
+    network_mode: "service:pia-vpn"
+    restart: unless-stopped

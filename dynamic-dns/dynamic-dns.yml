@@ -1,0 +1,13 @@
+---
+version: "3.1"
+services:
+  ddclient:
+    image: lscr.io/linuxserver/ddclient:latest
+    container_name: ddclient
+    environment:
+      - PUID=2100
+      - PGID=2100
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${CONFIG_ROOT}/dynamic-dns/config:/config
+    restart: unless-stopped
