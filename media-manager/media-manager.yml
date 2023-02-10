@@ -13,14 +13,15 @@ services:
     container_name: pia-vpn
     environment:
       - USERNAME=${PIA_USERNAME}
-      - PASSWORD='${PIA_PASSWORD}'
+      - PASSWORD=${PIA_PASSWORD}
       - REGION=${REGION}
       - SUBNET=${SUBNET}
+      - PORTS=${PORTS}
     ports:
       - 7878:7878
       - 8686:8686
       - 8989:8989
-      - 9191:9091
+      - 9091:9091
       - 9117:9117
     cap_add:
       - NET_ADMIN
@@ -85,9 +86,8 @@ services:
       - PUID=1500
       - PGID=1500
       - USER=${TRANSMISSION_USERNAME}
-      - PASS='$TRANSMISSION_PASSWORD}'
+      - PASS=${TRANSMISSION_PASSWORD}
       - TZ=${TIMEZONE}
-      - ALL_PROXY=${PROXY_URL}
       - TRANSMISSION_WEB_HOME=/transmission-web-control/
     volumes:
       - transmission-vol:/config

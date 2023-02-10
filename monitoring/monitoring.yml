@@ -11,27 +11,24 @@ services:
     volumes:
       - prometheus-vol:/prometheus
       - ${CONFIG_ROOT}/monitoring/prometheus/config:/etc/prometheus/
-    network_mode: "host"
+    ports:
+      - 9090:9090
     restart: unless-stopped
   pve_exporter:
     image: prompve/prometheus-pve-exporter
-    container_name: prometheus-pve-exporter
+    container_name: proxmox-exporter
     volumes:
       - ${CONFIG_ROOT}/monitoring/exporters/pve/config/pve.yml:/etc/pve.yml
-    ports:
-      - 9221:9221
     restart: unless-stopped
   snmp_exporter:
     image: prom/snmp-exporter
     container_name: snmp-exporter
-    ports:
-      - 9116:9116
     restart: unless-stopped
   blackbox_exporter:
     image: blackbox-exporter-icmp:latest
     container_name: blackbox-exporter
     user: root
-    network_mode: "host"
+
     volumes:
       - ${CONFIG_ROOT}/monitoring/exporters/blackbox/config:/config
     cap_add:
@@ -50,16 +47,14 @@ services:
     restart: unless-stopped
   unpoller:
     image: golift/unifi-poller:latest
-    container_name: unpoller
-    ports:
-      - 9130:9130
+    container_name: unifi-exporter
     environment:
       - UP_INFLUXDB_DISABLE=true
       - UP_PROMETHEUS_NAMESPACE=unifi_metrics
-      - UP_UNIFI_DEFAULT_USER='${UNIFI_USERNAME}'
-      - UP_UNIFI_DEFAULT_PASS='${UNIFI_PASSWORD}'
+      - UP_UNIFI_DEFAULT_USER=${UNIFI_USERNAME}
+      - UP_UNIFI_DEFAULT_PASS=${UNIFI_PASSWORD}
       - UP_UNIFI_DEFAULT_SAVE_DPI=true
       - UP_UNIFI_DEFAULT_SAVE_SITES=true
-      - UP_UNIFI_DEFAULT_URL='${UNIFI_CONTROLLER_URL}'
+      - UP_UNIFI_DEFAULT_URL=${UNIFI_CONTROLLER_URL}
       - UP_PROMETHEUS_HTTP_LISTEN=0.0.0.0:9130
     restart: unless-stopped
