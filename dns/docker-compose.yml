@@ -1,5 +1,3 @@
-version: "3.1"
-
 volumes:
   pihole-vol:
 
@@ -13,40 +11,50 @@ services:
       local:
         ipv4_address: ${SUBNET_PREFIX:-172.24.0}.1
     cap_add:
+      # Required for binding to privileged ports and managing network interfaces
       - NET_ADMIN
+
   pihole:
     container_name: pihole
     image: pihole/pihole:latest
+    depends_on:
+      unbound:
+        condition: service_healthy
     ports:
       # DNS Ports
       - "53:53/tcp"
       - "53:53/udp"
       # Default HTTP Port
       - "80:80/tcp"
-      # Default HTTPs Port. FTL will generate a self-signed certificate
+      # Default HTTPS Port. FTL will generate a self-signed certificate
       - "443:443/tcp"
     environment:
-      - TZ=${TIMEZONE}
+      TZ: ${TIMEZONE}
       # Set a password to access the web interface. Not setting one will result in a random password being assigned
-      - FTLCONF_webserver_api_password=${PASSWORD:?error}
+      FTLCONF_webserver_api_password: ${PASSWORD:?error}
       # If using Docker's default `bridge` network setting the dns listening mode should be set to 'all'
-      - FTLCONF_dns_listeningMode="all"
-    # Volumes store your data between container upgrades
+      FTLCONF_dns_listeningMode: all
+      # Upstream DNS servers for pi-hole
+      # The Unbound container is always included as the primary upstream
+      # Additional servers can be added via the ADDITIONAL_DNS_SERVERS variable
+      FTLCONF_dns_upstreams: |-
+        ${SUBNET_PREFIX:-172.24.0}.1
+        ${ADDITIONAL_DNS_SERVERS}
     volumes:
-      # For persisting Pi-hole's databases and common configuration file
+      # For persisting pi-hole's databases and common configuration file
       - pihole-vol:/etc/pihole
     networks:
       default: {}
       local:
         ipv4_address: ${SUBNET_PREFIX:-172.24.0}.2
     cap_add:
-      # Optional, if Pi-hole should get some more processing time
+      # Optional, if pi-hole should get some more processing time
       - SYS_NICE
     restart: unless-stopped
 
 networks:
   default: {}
-  # An internal network with static IPs for pi-hole to communicate with unbound
+  # An internal network with static IPs for pi-hole to communicate with Unbound
   local:
     ipam:
       driver: default
