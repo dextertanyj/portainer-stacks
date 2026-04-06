@@ -52,6 +52,26 @@ services:
       - SYS_NICE
     restart: unless-stopped
 
+  nebula-sync:
+    container_name: nebula-sync
+    image: ghcr.io/lovelaze/nebula-sync:latest
+    profiles:
+      - sync
+    depends_on:
+      pihole:
+        condition: service_healthy
+    environment:
+      TZ: ${TIMEZONE}
+      PRIMARY: http://${SUBNET_PREFIX:-172.24.0}.2|${PASSWORD:?error}
+      REPLICAS: ${SYNC_REPLICAS}
+      FULL_SYNC: ${FULL_SYNC:-true}
+      RUN_GRAVITY: ${RUN_GRAVITY:-false}
+      CRON: ${SYNC_CRON:-*/5 * * * *}
+    networks:
+      default: {}
+      local: {}
+    restart: unless-stopped
+
 networks:
   default: {}
   # An internal network with static IPs for pi-hole to communicate with Unbound
